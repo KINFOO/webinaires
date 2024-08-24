@@ -1,5 +1,5 @@
-import { InMemoryUserRepository } from 'src/adapters/in-memory-user-repository';
-import { User } from 'src/entities/user.entity';
+import { InMemoryUserRepository } from 'src/users/adapters/in-memory-user-repository';
+import { User } from 'src/users/entities/user.entity';
 import { Authenticator } from './authenticator';
 
 describe('Authenticator', () => {
