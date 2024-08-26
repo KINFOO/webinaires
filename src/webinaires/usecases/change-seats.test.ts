@@ -1,4 +1,4 @@
-import { User } from '../../users/entities/user.entity';
+import { testUsers } from '../../users/tests/user-seeds';
 import { InMemoryWebinaireRepository } from '../adapters/in-memory-webinaire-repository';
 import { Webinaire } from '../entities/webinaire.entity';
 import { ChangeSeats } from './change-seats';
@@ -9,25 +9,13 @@ describe("Feature: updating webinaire's seats", () => {
     expect(webinaire!.props.seats).toEqual(50);
   }
 
-  const johnDoe = new User({
-    id: 'john-doe',
-    emailAddress: 'johndoe@gmail.com',
-    password: 'azerty',
-  });
-
-  const janeDoe = new User({
-    id: 'jane-doe',
-    emailAddress: 'jane@gmail.com',
-    password: 'azerty',
-  });
-
   const webinaire = new Webinaire({
     id: 'id-1',
     title: 'Joy',
     seats: 50,
     startDate: new Date('2023-01-10T10:00:00.000Z'),
     endDate: new Date('2023-01-10T11:00:00.000Z'),
-    organizerId: johnDoe.props.id,
+    organizerId: testUsers.alice.props.id,
   });
 
   let repository: InMemoryWebinaireRepository;
@@ -41,7 +29,7 @@ describe("Feature: updating webinaire's seats", () => {
   describe('Scenario: happy path', () => {
     it('should change the number of seats', async () => {
       await useCase.execute({
-        user: johnDoe,
+        user: testUsers.alice,
         webinaireId: 'id-1',
         seats: 100,
       });
@@ -56,7 +44,7 @@ describe("Feature: updating webinaire's seats", () => {
     it('should fail', async () => {
       expect(async () => {
         await useCase.execute({
-          user: johnDoe,
+          user: testUsers.alice,
           webinaireId: 'id-2',
           seats: 100,
         });
@@ -69,13 +57,15 @@ describe("Feature: updating webinaire's seats", () => {
 
   describe("Scenario: user is not webinaire's organizer", () => {
     it('should fail', async () => {
-      expect(async () => {
-        await useCase.execute({
-          user: janeDoe,
-          webinaireId: 'id-1',
-          seats: 100,
-        });
-      }).rejects.toThrow('Seats update is restricted to organizer');
+      const payload = {
+        user: testUsers.bob,
+        webinaireId: 'id-1',
+        seats: 100,
+      };
+
+      expect(async () => await useCase.execute(payload)).rejects.toThrow(
+        'Seats update is restricted to organizer',
+      );
 
       await expectSeatsToRemainUnchanged();
     });
@@ -83,13 +73,15 @@ describe("Feature: updating webinaire's seats", () => {
 
   describe('Scenario: seat decrease', () => {
     it('should fail', async () => {
-      expect(async () => {
-        await useCase.execute({
-          user: johnDoe,
-          webinaireId: 'id-1',
-          seats: 49,
-        });
-      }).rejects.toThrow('Seats upgrade only');
+      const payload = {
+        user: testUsers.alice,
+        webinaireId: 'id-1',
+        seats: 49,
+      };
+
+      expect(async () => await useCase.execute(payload)).rejects.toThrow(
+        'Seats upgrade only',
+      );
 
       await expectSeatsToRemainUnchanged();
     });
@@ -97,13 +89,15 @@ describe("Feature: updating webinaire's seats", () => {
 
   describe('Scenario: increase seats above limit', () => {
     it('should fail', async () => {
-      expect(async () => {
-        await useCase.execute({
-          user: johnDoe,
-          webinaireId: 'id-1',
-          seats: 1001,
-        });
-      }).rejects.toThrow('The webinaire must have a maximum of 1500 seats');
+      const payload = {
+        user: testUsers.alice,
+        webinaireId: 'id-1',
+        seats: 1001,
+      };
+
+      expect(async () => await useCase.execute(payload)).rejects.toThrow(
+        'The webinaire must have a maximum of 1500 seats',
+      );
 
       await expectSeatsToRemainUnchanged();
     });

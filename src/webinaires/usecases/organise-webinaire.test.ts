@@ -1,6 +1,6 @@
 import { FixedDateGenerator } from '../../core/adapters/fixed-date-generator';
 import { FixedIDGenerator } from '../../core/adapters/fixed-id-generator';
-import { User } from '../../users/entities/user.entity';
+import { testUsers } from '../../users/tests/user-seeds';
 import { InMemoryWebinaireRepository } from '../adapters/in-memory-webinaire-repository';
 import { Webinaire } from '../entities/webinaire.entity';
 import { OrganizeWebinaire } from './organise-webinaire';
@@ -9,7 +9,7 @@ describe('Feature: organizing a webinaire', () => {
   function expectWebinaireToEqual(webinaire: Webinaire) {
     expect(webinaire.props).toEqual({
       id: 'id-1',
-      organizerId: 'john-doe',
+      organizerId: 'alice',
       title: 'My first webinaire',
       seats: 100,
       startDate: new Date('2023-01-10T10:00:00.000Z'),
@@ -21,11 +21,6 @@ describe('Feature: organizing a webinaire', () => {
   let useCase: OrganizeWebinaire;
   const idGenerator = new FixedIDGenerator();
   const dateGenerator = new FixedDateGenerator();
-  const johnDoe = new User({
-    id: 'john-doe',
-    emailAddress: 'johndoe@gmail.com',
-    password: 'azerty',
-  });
 
   beforeEach(() => {
     repository = new InMemoryWebinaireRepository();
@@ -38,7 +33,7 @@ describe('Feature: organizing a webinaire', () => {
       seats: 100,
       startDate: new Date('2023-01-10T10:00:00.000Z'),
       endDate: new Date('2023-01-10T11:00:00.000Z'),
-      user: johnDoe,
+      user: testUsers.alice,
     };
 
     it('should return the ID', async () => {
@@ -63,7 +58,7 @@ describe('Feature: organizing a webinaire', () => {
       seats: 100,
       startDate: new Date('2023-01-01T10:00:00.000Z'),
       endDate: new Date('2023-01-01T11:00:00.000Z'),
-      user: johnDoe,
+      user: testUsers.alice,
     };
 
     it('should throw an error', async () => {
@@ -86,7 +81,7 @@ describe('Feature: organizing a webinaire', () => {
       seats: 1500,
       startDate: new Date('2023-01-10T10:00:00.000Z'),
       endDate: new Date('2023-01-10T11:00:00.000Z'),
-      user: johnDoe,
+      user: testUsers.alice,
     };
 
     it('should throw an error', async () => {
@@ -109,7 +104,7 @@ describe('Feature: organizing a webinaire', () => {
       seats: -1,
       startDate: new Date('2023-01-10T10:00:00.000Z'),
       endDate: new Date('2023-01-10T11:00:00.000Z'),
-      user: johnDoe,
+      user: testUsers.alice,
     };
 
     it('should throw an error', async () => {
