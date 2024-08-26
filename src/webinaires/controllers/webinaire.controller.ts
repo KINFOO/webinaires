@@ -1,12 +1,23 @@
-import { Body, Controller, Post, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Param,
+  Post,
+  Request,
+} from '@nestjs/common';
 import { ZodValidationPipe } from '../../core/pipes/zod-validation.pipe';
 import { User } from '../../users/entities/user.entity';
 import { WebinaireAPI } from '../contracts';
+import { ChangeSeats } from '../usecases/change-seats';
 import { OrganizeWebinaire } from '../usecases/organise-webinaire';
 
 @Controller()
 export class WebinaireController {
-  constructor(private readonly organizeWebinaire: OrganizeWebinaire) {}
+  constructor(
+    private readonly changeSeats: ChangeSeats,
+    private readonly organizeWebinaire: OrganizeWebinaire,
+  ) {}
 
   @Post('/webinaires')
   async handleOrganizeWebinaire(
@@ -21,6 +32,21 @@ export class WebinaireController {
       seats,
       startDate,
       endDate,
+    });
+  }
+
+  @HttpCode(200)
+  @Post('/webinaires/:id/seats')
+  async handleChangeSeats(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(WebinaireAPI.ChangeSeats.schema))
+    body: WebinaireAPI.ChangeSeats.Request,
+    @Request() request: { user: User },
+  ): Promise<WebinaireAPI.ChangeSeats.Response> {
+    return this.changeSeats.execute({
+      user: request.user,
+      webinaireId: id,
+      seats: body.seats,
     });
   }
 }

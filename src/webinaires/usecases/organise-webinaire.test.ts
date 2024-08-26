@@ -1,7 +1,7 @@
 import { FixedDateGenerator } from '../../core/adapters/fixed-date-generator';
 import { FixedIDGenerator } from '../../core/adapters/fixed-id-generator';
-import { InMemoryWebinaireRepository } from '../adapters/in-memory-webinaire-repository';
 import { User } from '../../users/entities/user.entity';
+import { InMemoryWebinaireRepository } from '../adapters/in-memory-webinaire-repository';
 import { Webinaire } from '../entities/webinaire.entity';
 import { OrganizeWebinaire } from './organise-webinaire';
 
@@ -17,6 +17,8 @@ describe('Feature: organizing a webinaire', () => {
     });
   }
 
+  let repository: InMemoryWebinaireRepository;
+  let useCase: OrganizeWebinaire;
   const idGenerator = new FixedIDGenerator();
   const dateGenerator = new FixedDateGenerator();
   const johnDoe = new User({
@@ -24,8 +26,6 @@ describe('Feature: organizing a webinaire', () => {
     emailAddress: 'johndoe@gmail.com',
     password: 'azerty',
   });
-  let repository = new InMemoryWebinaireRepository();
-  let useCase = new OrganizeWebinaire(repository, idGenerator, dateGenerator);
 
   beforeEach(() => {
     repository = new InMemoryWebinaireRepository();
