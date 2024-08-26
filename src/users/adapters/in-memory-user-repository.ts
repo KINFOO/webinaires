@@ -2,8 +2,7 @@ import { User } from '../entities/user.entity';
 import { IUserRepository } from '../ports/user-repository.interface';
 
 export class InMemoryUserRepository implements IUserRepository {
-  public database: User[] = [];
-
+  constructor(public readonly database: User[] = []) {}
   async create(user: User): Promise<void> {
     this.database.push(user);
   }
@@ -12,6 +11,11 @@ export class InMemoryUserRepository implements IUserRepository {
     const user = this.database.find(
       (user) => user.props.emailAddress === emailAddress,
     );
+    return user ?? null;
+  }
+
+  async findById(id: string) {
+    const user = this.database.find((user) => user.props.id === id);
     return user ?? null;
   }
 }
