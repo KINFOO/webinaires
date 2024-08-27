@@ -4,6 +4,9 @@ import { Executable } from '../../shared/executable';
 import { User } from '../../users/entities/user.entity';
 import { IUserRepository } from '../../users/ports/user-repository.interface';
 import { Webinaire } from '../entities/webinaire.entity';
+import { WebinaireNotFoundException } from '../exceptions/webinaire-not-found';
+import { WebinaireTooEarlyException } from '../exceptions/webinaire-too-early';
+import { WebinaireUpdateForbiddenException } from '../exceptions/webinaire-update-forbidden';
 import { IParticipationRepository } from '../ports/participation-repository.interface';
 import { IWebinaireRepository } from '../ports/webinaire-repository.interface';
 
@@ -32,22 +35,22 @@ export class ChangeDates implements Executable<Request, Response> {
   }: Request): Promise<Response> {
     const webinaire = await this.webinaireRepository.findById(webinaireId);
     if (!webinaire) {
-      throw new Error('Webinaire not found');
-    } else if (webinaire.props.organizerId !== user.props.id) {
-      throw new Error('Dates update is restricted to organizer');
+      throw new WebinaireNotFoundException();
+    } else if (!webinaire.isOrganiser(user)) {
+      throw new WebinaireUpdateForbiddenException();
     }
 
     webinaire.update({ startDate, endDate });
 
     if (webinaire.isTooClose(this.dateGenerator.now())) {
-      throw new Error('The webinaire must happen in least 3 days');
+      throw new WebinaireTooEarlyException();
     }
 
     await this.webinaireRepository.update(webinaire);
     await this.sendEmailToParticipants(webinaire);
   }
 
-  async sendEmailToParticipants(webinaire: Webinaire): Promise<void> {
+  private async sendEmailToParticipants(webinaire: Webinaire): Promise<void> {
     const participations = await this.participationRepository.findByWebinaireId(
       webinaire.props.id,
     );
@@ -58,15 +61,16 @@ export class ChangeDates implements Executable<Request, Response> {
       ),
     );
 
-    const validUsers = users.filter((user) => !!user);
     const { title, startDate, endDate } = webinaire.props;
-    const mailPromises = validUsers.map((user) =>
-      this.mailer.send({
-        to: user.props.emailAddress,
-        subject: `The dates of "${title}" have changed`,
-        body: `New dates are ${startDate.toISOString()} - ${endDate.toISOString()}`,
-      }),
-    );
+    const mailPromises = users
+      .filter((user) => user !== null)
+      .map((user) =>
+        this.mailer.send({
+          to: user!.props.emailAddress,
+          subject: `The dates of "${title}" have changed`,
+          body: `New dates are ${startDate.toISOString()} - ${endDate.toISOString()}`,
+        }),
+      );
 
     await Promise.all(mailPromises);
   }

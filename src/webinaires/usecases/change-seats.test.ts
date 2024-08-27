@@ -64,7 +64,7 @@ describe("Feature: updating webinaire's seats", () => {
       };
 
       expect(async () => await useCase.execute(payload)).rejects.toThrow(
-        'Seats update is restricted to organizer',
+        'Not allowed to update this webinaire',
       );
 
       await expectSeatsToRemainUnchanged();
@@ -96,7 +96,7 @@ describe("Feature: updating webinaire's seats", () => {
       };
 
       expect(async () => await useCase.execute(payload)).rejects.toThrow(
-        'The webinaire must have a maximum of 1500 seats',
+        'Webinaire must have a maximum of 1500 seats',
       );
 
       await expectSeatsToRemainUnchanged();

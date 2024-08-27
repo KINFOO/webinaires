@@ -118,7 +118,7 @@ describe("Feature: updating webinaire's dates", () => {
       };
 
       expect(async () => await useCase.execute(payload)).rejects.toThrow(
-        'Dates update is restricted to organizer',
+        'Not allowed to update this webinaire',
       );
 
       await expectDatesToRemainUnchanged();
@@ -135,26 +135,10 @@ describe("Feature: updating webinaire's dates", () => {
       };
 
       expect(async () => await useCase.execute(payload)).rejects.toThrow(
-        'The webinaire must happen in least 3 days',
+        'Webinaire must happen in least 3 days',
       );
 
       await expectDatesToRemainUnchanged();
     });
   });
-
-  // describe('Scenario: increase seats above limit', () => {
-  //   it('should send an email to the participants', async () => {
-  //     const payload = {
-  //       user: testUsers.alice,
-  //       webinaireId: 'id-1',
-  //       seats: 1001,
-  //     };
-
-  //     expect(async () => await useCase.execute(payload)).rejects.toThrow(
-  //       'The webinaire must have a maximum of 1500 seats',
-  //     );
-
-  //     await expectDatesToRemainUnchanged();
-  //   });
-  // });
 });

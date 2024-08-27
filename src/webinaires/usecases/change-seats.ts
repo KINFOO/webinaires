@@ -1,5 +1,9 @@
+import { DomainException } from '../../shared/domain-exeption';
 import { Executable } from '../../shared/executable';
 import { User } from '../../users/entities/user.entity';
+import { WebinaireNotFoundException } from '../exceptions/webinaire-not-found';
+import { WebinaireTooManySeatsException } from '../exceptions/webinaire-too-many-seats';
+import { WebinaireUpdateForbiddenException } from '../exceptions/webinaire-update-forbidden';
 import { IWebinaireRepository } from '../ports/webinaire-repository.interface';
 
 type Request = {
@@ -16,17 +20,17 @@ export class ChangeSeats implements Executable<Request, Response> {
   async execute({ user, webinaireId, seats }: Request): Promise<Response> {
     const webinaire = await this.webinaireRepository.findById(webinaireId);
     if (!webinaire) {
-      throw new Error('Webinaire not found');
+      throw new WebinaireNotFoundException();
     } else if (webinaire.props.seats > seats) {
-      throw new Error('Seats upgrade only');
-    } else if (webinaire.props.organizerId !== user.props.id) {
-      throw new Error('Seats update is restricted to organizer');
+      throw new DomainException('Seats upgrade only');
+    } else if (!webinaire.isOrganiser(user)) {
+      throw new WebinaireUpdateForbiddenException();
     }
 
     webinaire.update({ seats });
 
     if (webinaire.hasTooManySeats()) {
-      throw new Error('The webinaire must have a maximum of 1500 seats');
+      throw new WebinaireTooManySeatsException();
     }
     await this.webinaireRepository.update(webinaire);
   }

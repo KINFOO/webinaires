@@ -63,7 +63,7 @@ describe('Feature: organizing a webinaire', () => {
 
     it('should throw an error', async () => {
       await expect(() => useCase.execute(payload)).rejects.toThrowError(
-        'The webinaire must happen in least 3 days',
+        'Webinaire must happen in least 3 days',
       );
     });
     it('should not create a webinaire', async () => {
@@ -86,7 +86,7 @@ describe('Feature: organizing a webinaire', () => {
 
     it('should throw an error', async () => {
       await expect(() => useCase.execute(payload)).rejects.toThrowError(
-        'The webinaire must have a maximum of 1500 seats',
+        'Webinaire must have a maximum of 1500 seats',
       );
     });
     it('should not create a webinaire', async () => {
@@ -109,7 +109,7 @@ describe('Feature: organizing a webinaire', () => {
 
     it('should throw an error', async () => {
       await expect(() => useCase.execute(payload)).rejects.toThrowError(
-        'The webinaire must have seats',
+        'Webinaire must have seats',
       );
     });
     it('should not create a webinaire', async () => {
