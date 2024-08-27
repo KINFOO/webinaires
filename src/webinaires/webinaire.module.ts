@@ -10,6 +10,7 @@ import { InMemoryWebinaireRepository } from './adapters/in-memory-webinaire-repo
 import { WebinaireController } from './controllers/webinaire.controller';
 import { I_PARTICIPATION_REPOSITORY } from './ports/participation-repository.interface';
 import { I_WEBINAIRE_REPOSITORY } from './ports/webinaire-repository.interface';
+import { CancelWebinaire } from './usecases/cancel-webinaire';
 import { ChangeDates } from './usecases/change-dates';
 import { ChangeSeats } from './usecases/change-seats';
 import { OrganizeWebinaire } from './usecases/organise-webinaire';
@@ -55,6 +56,28 @@ import { OrganizeWebinaire } from './usecases/organise-webinaire';
           userRepository,
           webinaireRepository,
           dateGeneraror,
+          mailer,
+        );
+      },
+    },
+    {
+      provide: CancelWebinaire,
+      inject: [
+        I_WEBINAIRE_REPOSITORY,
+        I_PARTICIPATION_REPOSITORY,
+        I_USER_REPOSITORY,
+        I_MAILER,
+      ],
+      useFactory: (
+        webinaireRepository,
+        participationRepository,
+        userRepository,
+        mailer,
+      ) => {
+        return new CancelWebinaire(
+          webinaireRepository,
+          participationRepository,
+          userRepository,
           mailer,
         );
       },

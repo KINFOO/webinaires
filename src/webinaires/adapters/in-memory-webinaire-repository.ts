@@ -1,4 +1,5 @@
 import { Webinaire } from '../entities/webinaire.entity';
+import { WebinaireNotFoundException } from '../exceptions/webinaire-not-found';
 import { IWebinaireRepository } from '../ports/webinaire-repository.interface';
 
 export class InMemoryWebinaireRepository implements IWebinaireRepository {
@@ -9,11 +10,9 @@ export class InMemoryWebinaireRepository implements IWebinaireRepository {
   }
 
   async update(webinaire: Webinaire): Promise<void> {
-    const index = this.database.findIndex(
-      (w) => w.props.id === webinaire.props.id,
-    );
+    const index = this.findIndex(webinaire);
     if (index === -1) {
-      throw new Error('Webinaire to update not found');
+      throw new WebinaireNotFoundException();
     }
     webinaire.commit();
     this.database[index] = webinaire;
@@ -26,5 +25,17 @@ export class InMemoryWebinaireRepository implements IWebinaireRepository {
 
   async findById(id: string): Promise<Webinaire | null> {
     return this.findByIdSync(id);
+  }
+
+  async delete(webinaire: Webinaire): Promise<void> {
+    const index = this.findIndex(webinaire);
+    if (index === -1) {
+      throw new WebinaireNotFoundException();
+    }
+    this.database.splice(index, 1);
+  }
+
+  private findIndex(webinaire: Webinaire): number {
+    return this.database.findIndex((w) => w.props.id === webinaire.props.id);
   }
 }
