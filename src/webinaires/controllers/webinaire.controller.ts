@@ -14,12 +14,14 @@ import { CancelWebinaire } from '../usecases/cancel-webinaire';
 import { ChangeDates } from '../usecases/change-dates';
 import { ChangeSeats } from '../usecases/change-seats';
 import { OrganizeWebinaire } from '../usecases/organise-webinaire';
+import { ReserveSeats } from '../usecases/reserve-seats';
 
 @Controller()
 export class WebinaireController {
   constructor(
     private readonly changeDates: ChangeDates,
     private readonly changeSeats: ChangeSeats,
+    private readonly reserveSeats: ReserveSeats,
     private readonly cancelWebinaire: CancelWebinaire,
     private readonly organizeWebinaire: OrganizeWebinaire,
   ) {}
@@ -77,7 +79,7 @@ export class WebinaireController {
   async handleCancelWebinaire(
     @Param('id') id: string,
     @Request() request: { user: User },
-  ): Promise<WebinaireAPI.ChangeDates.Response> {
+  ): Promise<WebinaireAPI.DeleteWebinaire.Response> {
     return this.cancelWebinaire.execute({
       user: request.user,
       webinaireId: id,
