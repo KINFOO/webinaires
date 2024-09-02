@@ -1,4 +1,5 @@
 import { Participation } from '../entities/participation.entity';
+import { ParticipationNotFoundException } from '../exceptions/participation-not-found';
 import { IParticipationRepository } from '../ports/participation-repository.interface';
 
 export class InMemoryParticipationRepository
@@ -13,6 +14,18 @@ export class InMemoryParticipationRepository
 
   async create(participation: Participation): Promise<void> {
     this.database.push(participation);
+  }
+
+  async delete(participation: Participation): Promise<void> {
+    const index = this.database.findIndex(
+      ({ props: { userId, webinaireId } }) =>
+        userId === participation.props.userId &&
+        webinaireId === participation.props.webinaireId,
+    );
+    if (index === -1) {
+      throw new ParticipationNotFoundException();
+    }
+    this.database.splice(index, 1);
   }
 
   async findOne(

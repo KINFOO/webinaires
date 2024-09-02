@@ -5,10 +5,10 @@ import { InMemoryParticipationRepository } from '../adapters/in-memory-participa
 import { InMemoryWebinaireRepository } from '../adapters/in-memory-webinaire-repository';
 import { Participation } from '../entities/participation.entity';
 import { Webinaire } from '../entities/webinaire.entity';
-import { ReserveSeats } from './reserve-seats';
+import { CancelSeats } from './cancel-seats';
 
 describe('Feature: canceling webinaire', () => {
-  async function expectParticipationNotToBeCreated() {
+  async function expectParticipationToBeDeleted() {
     const participation = await participationRepository.findOne(
       testUsers.bob.props.id,
       webinaire.props.id,
@@ -16,7 +16,7 @@ describe('Feature: canceling webinaire', () => {
     expect(participation).toBeNull();
   }
 
-  async function expectParticipationToBeCreated() {
+  async function expectParticipationNotToBeDeleted() {
     const participation = await participationRepository.findOne(
       testUsers.bob.props.id,
       webinaire.props.id,
@@ -33,43 +33,30 @@ describe('Feature: canceling webinaire', () => {
     organizerId: testUsers.alice.props.id,
   });
 
-  const singleSeatWebinaire = new Webinaire({
-    id: 'id-2',
-    title: 'Deluxe',
-    seats: 1,
-    startDate: new Date('2023-01-20T10:00:00.000Z'),
-    endDate: new Date('2023-01-21T11:00:00.000Z'),
-    organizerId: testUsers.alice.props.id,
+  const bobParticipation = new Participation({
+    userId: testUsers.bob.props.id,
+    webinaireId: webinaire.props.id,
   });
 
-  const charlesParticipation = new Participation({
-    userId: testUsers.charles.props.id,
-    webinaireId: singleSeatWebinaire.props.id,
-  });
-
-  let useCase: ReserveSeats;
+  let useCase: CancelSeats;
   let mailer: InMemoryMailer;
   let participationRepository: InMemoryParticipationRepository;
   let userRepository: InMemoryUserRepository;
   let webinaireRepository: InMemoryWebinaireRepository;
 
   beforeEach(async () => {
+    participationRepository = new InMemoryParticipationRepository([
+      bobParticipation,
+    ]);
+
     userRepository = new InMemoryUserRepository([
       testUsers.alice,
       testUsers.bob,
-      testUsers.charles,
     ]);
 
+    webinaireRepository = new InMemoryWebinaireRepository([webinaire]);
     mailer = new InMemoryMailer();
-
-    const webinaires = [webinaire, singleSeatWebinaire];
-    webinaireRepository = new InMemoryWebinaireRepository(webinaires);
-
-    participationRepository = new InMemoryParticipationRepository([
-      charlesParticipation,
-    ]);
-
-    useCase = new ReserveSeats(
+    useCase = new CancelSeats(
       participationRepository,
       userRepository,
       webinaireRepository,
@@ -83,9 +70,9 @@ describe('Feature: canceling webinaire', () => {
       webinaireId: webinaire.props.id,
     };
 
-    it('should reserve a seat', async () => {
+    it('should cancel a seat', async () => {
       await useCase.execute(payload);
-      await expectParticipationToBeCreated();
+      await expectParticipationToBeDeleted();
     });
 
     it('should send an email to organizer', async () => {
@@ -93,8 +80,8 @@ describe('Feature: canceling webinaire', () => {
       const [origanizerEmail] = mailer.sentEmails;
       expect(origanizerEmail).toEqual({
         to: testUsers.alice.props.emailAddress,
-        subject: 'New participation',
-        body: `New reservation for "${webinaire.props.title}"`,
+        subject: 'Participation canceled',
+        body: `${testUsers.alice.props.emailAddress} dropped reservation for "${webinaire.props.title}"`,
       });
     });
 
@@ -104,8 +91,8 @@ describe('Feature: canceling webinaire', () => {
       const [_, participantEmail] = mailer.sentEmails;
       expect(participantEmail).toEqual({
         to: testUsers.bob.props.emailAddress,
-        subject: 'Participation accepted',
-        body: `Your participation to "${webinaire.props.title}" has been accepted`,
+        subject: 'Participation canceled',
+        body: `Your participation to "${webinaire.props.title}" has been canceled`,
       });
     });
   });
@@ -120,49 +107,21 @@ describe('Feature: canceling webinaire', () => {
       expect(async () => await useCase.execute(payload)).rejects.toThrowError(
         'Webinaire not found',
       );
-      await expectParticipationNotToBeCreated();
+      await expectParticipationNotToBeDeleted();
     });
   });
 
-  describe('Scenario: webinaire is full', () => {
-    const payload = {
-      user: testUsers.bob,
-      webinaireId: singleSeatWebinaire.props.id,
-    };
-
-    it('should fail', async () => {
-      expect(async () => await useCase.execute(payload)).rejects.toThrowError(
-        'Webinaire is full',
-      );
-      await expectParticipationNotToBeCreated();
-    });
-  });
-
-  describe('Scenario: reserve a seat in an already full webinaire', () => {
-    const payload = {
-      user: testUsers.bob,
-      webinaireId: singleSeatWebinaire.props.id,
-    };
-
-    it('should fail', async () => {
-      expect(async () => await useCase.execute(payload)).rejects.toThrowError(
-        'Webinaire is full',
-      );
-      await expectParticipationNotToBeCreated();
-    });
-  });
-
-  describe('Scenario: reserve a seat you already have one', () => {
+  describe('Scenario: user does not attend webinaire', () => {
     const payload = {
       user: testUsers.charles,
-      webinaireId: singleSeatWebinaire.props.id,
+      webinaireId: webinaire.props.id,
     };
 
     it('should fail', async () => {
       expect(async () => await useCase.execute(payload)).rejects.toThrowError(
-        "You're already attending this webinaire",
+        'You were not attending this webinaire',
       );
-      await expectParticipationNotToBeCreated();
+      await expectParticipationNotToBeDeleted();
     });
   });
 });

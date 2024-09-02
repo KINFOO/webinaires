@@ -35,4 +35,7 @@ export namespace WebinaireAPI {
   export namespace ReserveSeats {
     export type Response = void;
   }
+  export namespace CancelSeats {
+    export type Response = void;
+  }
 }
