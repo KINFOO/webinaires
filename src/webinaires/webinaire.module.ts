@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { getModelToken, MongooseModule } from '@nestjs/mongoose';
 import { CommonModule } from '../core/common.module';
 import { I_DATE_GENERATOR } from '../core/ports/date-generator.interface';
 import { I_ID_GENERATOR } from '../core/ports/id-generator.interface';
@@ -6,7 +7,8 @@ import { I_MAILER } from '../core/ports/mailer.interface';
 import { I_USER_REPOSITORY } from '../users/ports/user-repository.interface';
 import { UserModule } from '../users/user.module';
 import { InMemoryParticipationRepository } from './adapters/in-memory-participation-repository';
-import { InMemoryWebinaireRepository } from './adapters/in-memory-webinaire-repository';
+import { MongoWebinaire } from './adapters/mongo/mongo-webinaire';
+import { MongoWebinaireRepository } from './adapters/mongo/mongo-webinaire-repository';
 import { ParticipationController } from './controllers/participation.controller';
 import { WebinaireController } from './controllers/webinaire.controller';
 import { I_PARTICIPATION_REPOSITORY } from './ports/participation-repository.interface';
@@ -19,7 +21,13 @@ import { OrganizeWebinaire } from './usecases/organise-webinaire';
 import { ReserveSeats } from './usecases/reserve-seats';
 
 @Module({
-  imports: [CommonModule, UserModule],
+  imports: [
+    CommonModule,
+    UserModule,
+    MongooseModule.forFeature([
+      { name: MongoWebinaire.CollectionName, schema: MongoWebinaire.Schema },
+    ]),
+  ],
   controllers: [ParticipationController, WebinaireController],
   exports: [I_PARTICIPATION_REPOSITORY, I_WEBINAIRE_REPOSITORY],
   providers: [
@@ -29,7 +37,8 @@ import { ReserveSeats } from './usecases/reserve-seats';
     },
     {
       provide: I_WEBINAIRE_REPOSITORY,
-      useClass: InMemoryWebinaireRepository,
+      inject: [getModelToken(MongoWebinaire.CollectionName)],
+      useFactory: (model) => new MongoWebinaireRepository(model),
     },
     {
       provide: OrganizeWebinaire,

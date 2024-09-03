@@ -15,4 +15,8 @@ export abstract class Entity<TType> {
   commit(): void {
     this.initialState = this.props;
   }
+
+  clone() {
+    return new (this.constructor as any)(this.props);
+  }
 }

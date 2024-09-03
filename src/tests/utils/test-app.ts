@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing';
 import { Model } from 'mongoose';
 import { AppModule } from '../../core/app.module';
 import { MongoUser } from '../../users/adapters/mongo/mongo-user';
+import { MongoWebinaire } from '../../webinaires/adapters/mongo/mongo-webinaire';
 import { IFixture } from './fixture.interface';
 
 export class TestApp {
@@ -50,10 +51,18 @@ export class TestApp {
   }
 
   private async clearDatabase() {
-    const modelToken = getModelToken(MongoUser.CollectionName);
-    const model = this.app.get<Model<MongoUser.SchemaClass>>(modelToken);
-    if (model) {
-      await model.deleteMany();
+    const userModelToken = getModelToken(MongoUser.CollectionName);
+    const userModel =
+      this.app.get<Model<MongoUser.SchemaClass>>(userModelToken);
+    if (userModel) {
+      await userModel.deleteMany();
+    }
+
+    const webinaireModelToken = getModelToken(MongoWebinaire.CollectionName);
+    const webinaireModel =
+      this.app.get<Model<MongoWebinaire.SchemaClass>>(webinaireModelToken);
+    if (webinaireModel) {
+      await webinaireModel.deleteMany();
     }
   }
 }
