@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing';
 import { Model } from 'mongoose';
 import { AppModule } from '../../core/app.module';
 import { MongoUser } from '../../users/adapters/mongo/mongo-user';
+import { MongoParticipation } from '../../webinaires/adapters/mongo/mongo-participation';
 import { MongoWebinaire } from '../../webinaires/adapters/mongo/mongo-webinaire';
 import { IFixture } from './fixture.interface';
 
@@ -63,6 +64,13 @@ export class TestApp {
       this.app.get<Model<MongoWebinaire.SchemaClass>>(webinaireModelToken);
     if (webinaireModel) {
       await webinaireModel.deleteMany();
+    }
+
+    const pModelToken = getModelToken(MongoParticipation.CollectionName);
+    const participationModel =
+      this.app.get<Model<MongoParticipation.SchemaClass>>(pModelToken);
+    if (participationModel) {
+      await participationModel.deleteMany();
     }
   }
 }
