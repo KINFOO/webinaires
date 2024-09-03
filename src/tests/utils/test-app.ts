@@ -27,15 +27,10 @@ export class TestApp {
         }),
       ],
     }).compile();
+
     this.app = module.createNestApplication();
     await this.app.init();
-
-    // Database cleanup
-    const modelToken = getModelToken(MongoUser.CollectionName);
-    const model = this.app.get<Model<MongoUser.SchemaClass>>(modelToken);
-    if (model) {
-      await model.deleteMany();
-    }
+    await this.clearDatabase();
   }
 
   async cleanup() {
@@ -52,5 +47,13 @@ export class TestApp {
 
   getHttpServer() {
     return this.app.getHttpServer();
+  }
+
+  private async clearDatabase() {
+    const modelToken = getModelToken(MongoUser.CollectionName);
+    const model = this.app.get<Model<MongoUser.SchemaClass>>(modelToken);
+    if (model) {
+      await model.deleteMany();
+    }
   }
 }

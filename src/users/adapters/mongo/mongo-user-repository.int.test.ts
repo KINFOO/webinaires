@@ -1,11 +1,18 @@
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TestApp } from '../../../tests/utils/test-app';
+import { User } from '../../entities/user.entity';
 import { testUsers } from '../../tests/user-seeds';
 import { MongoUser } from './mongo-user';
 import { MongoUserRepository } from './mongo-user-repository';
 
 describe('MongoUserRepository', () => {
+  async function createUserInDatabase(user: User) {
+    const { id, emailAddress, password } = user.props;
+    const record = new model({ _id: id, emailAddress, password });
+    await record.save();
+  }
+
   let app: TestApp;
   let model: Model<MongoUser.SchemaClass>;
   let repository: MongoUserRepository;
@@ -19,10 +26,7 @@ describe('MongoUserRepository', () => {
     repository = new MongoUserRepository(model);
 
     await model.deleteMany();
-
-    const { id, emailAddress, password } = testUsers.alice.props;
-    const record = new model({ _id: id, emailAddress, password });
-    await record.save();
+    await createUserInDatabase(testUsers.alice);
   });
 
   describe('findByEmailAddress', () => {
