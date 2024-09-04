@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { WebinaireDTO } from './dto/webinaire.dto';
 
 export namespace WebinaireAPI {
   export namespace OrganizeWebinaire {
@@ -37,5 +38,9 @@ export namespace WebinaireAPI {
   }
   export namespace CancelSeats {
     export type Response = void;
+  }
+
+  export namespace GetWebinaireById {
+    export type Response = WebinaireDTO;
   }
 }

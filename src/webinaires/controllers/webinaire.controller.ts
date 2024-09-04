@@ -2,7 +2,9 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
+  Inject,
   Param,
   Post,
   Request,
@@ -10,20 +12,24 @@ import {
 import { ZodValidationPipe } from '../../core/pipes/zod-validation.pipe';
 import { User } from '../../users/entities/user.entity';
 import { WebinaireAPI } from '../contracts';
+import {
+  I_GET_WEBINAIRE_BY_ID_QUERY,
+  IGetWebinaireByIdQuery,
+} from '../ports/get-webinaire-by-id.interface';
 import { CancelWebinaire } from '../usecases/cancel-webinaire';
 import { ChangeDates } from '../usecases/change-dates';
 import { ChangeSeats } from '../usecases/change-seats';
 import { OrganizeWebinaire } from '../usecases/organise-webinaire';
-import { ReserveSeats } from '../usecases/reserve-seats';
 
 @Controller()
 export class WebinaireController {
   constructor(
     private readonly changeDates: ChangeDates,
     private readonly changeSeats: ChangeSeats,
-    private readonly reserveSeats: ReserveSeats,
     private readonly cancelWebinaire: CancelWebinaire,
     private readonly organizeWebinaire: OrganizeWebinaire,
+    @Inject(I_GET_WEBINAIRE_BY_ID_QUERY)
+    private readonly getWebinaireByIdQuery: IGetWebinaireByIdQuery,
   ) {}
 
   @Post('/webinaires')
@@ -84,5 +90,12 @@ export class WebinaireController {
       user: request.user,
       webinaireId: id,
     });
+  }
+
+  @Get('/webinaires/:id')
+  async handleGetWebinaireById(
+    @Param('id') id: string,
+  ): Promise<WebinaireAPI.GetWebinaireById.Response> {
+    return this.getWebinaireByIdQuery.execute(id);
   }
 }

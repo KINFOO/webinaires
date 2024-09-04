@@ -18,6 +18,6 @@ import { I_USER_REPOSITORY } from './ports/user-repository.interface';
       useFactory: (model) => new MongoUserRepository(model),
     },
   ],
-  exports: [I_USER_REPOSITORY],
+  exports: [MongooseModule, I_USER_REPOSITORY],
 })
 export class UserModule {}

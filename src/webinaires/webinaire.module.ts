@@ -4,14 +4,17 @@ import { CommonModule } from '../core/common.module';
 import { I_DATE_GENERATOR } from '../core/ports/date-generator.interface';
 import { I_ID_GENERATOR } from '../core/ports/id-generator.interface';
 import { I_MAILER } from '../core/ports/mailer.interface';
+import { MongoUser } from '../users/adapters/mongo/mongo-user';
 import { I_USER_REPOSITORY } from '../users/ports/user-repository.interface';
 import { UserModule } from '../users/user.module';
+import { MongoGetWebinaireById } from './adapters/mongo/mongo-get-webinaire-by-id-quey';
 import { MongoParticipation } from './adapters/mongo/mongo-participation';
 import { MongoParticipationRepository } from './adapters/mongo/mongo-participation-repository';
 import { MongoWebinaire } from './adapters/mongo/mongo-webinaire';
 import { MongoWebinaireRepository } from './adapters/mongo/mongo-webinaire-repository';
 import { ParticipationController } from './controllers/participation.controller';
 import { WebinaireController } from './controllers/webinaire.controller';
+import { I_GET_WEBINAIRE_BY_ID_QUERY } from './ports/get-webinaire-by-id.interface';
 import { I_PARTICIPATION_REPOSITORY } from './ports/participation-repository.interface';
 import { I_WEBINAIRE_REPOSITORY } from './ports/webinaire-repository.interface';
 import { CancelSeats } from './usecases/cancel-seats';
@@ -149,6 +152,21 @@ import { ReserveSeats } from './usecases/reserve-seats';
       inject: [I_WEBINAIRE_REPOSITORY],
       useFactory: (repository) => {
         return new ChangeSeats(repository);
+      },
+    },
+    {
+      provide: I_GET_WEBINAIRE_BY_ID_QUERY,
+      inject: [
+        getModelToken(MongoParticipation.CollectionName),
+        getModelToken(MongoUser.CollectionName),
+        getModelToken(MongoWebinaire.CollectionName),
+      ],
+      useFactory: (participationModel, userModel, webinaireModel) => {
+        return new MongoGetWebinaireById(
+          participationModel,
+          userModel,
+          webinaireModel,
+        );
       },
     },
   ],
