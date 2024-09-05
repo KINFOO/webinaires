@@ -5,7 +5,10 @@ import { InMemoryParticipationRepository } from '../adapters/in-memory-participa
 import { InMemoryWebinaireRepository } from '../adapters/in-memory-webinaire-repository';
 import { Participation } from '../entities/participation.entity';
 import { Webinaire } from '../entities/webinaire.entity';
-import { ReserveSeats } from './reserve-seats';
+import {
+  ReserveSeatsCommand,
+  ReserveSeatsCommandHandler,
+} from './reserve-seats';
 
 describe('Feature: canceling webinaire', () => {
   async function expectParticipationNotToBeCreated() {
@@ -47,7 +50,7 @@ describe('Feature: canceling webinaire', () => {
     webinaireId: singleSeatWebinaire.props.id,
   });
 
-  let useCase: ReserveSeats;
+  let useCase: ReserveSeatsCommandHandler;
   let mailer: InMemoryMailer;
   let participationRepository: InMemoryParticipationRepository;
   let userRepository: InMemoryUserRepository;
@@ -69,7 +72,7 @@ describe('Feature: canceling webinaire', () => {
       charlesParticipation,
     ]);
 
-    useCase = new ReserveSeats(
+    useCase = new ReserveSeatsCommandHandler(
       participationRepository,
       userRepository,
       webinaireRepository,
@@ -78,10 +81,7 @@ describe('Feature: canceling webinaire', () => {
   });
 
   describe('Scenario: happy path', () => {
-    const payload = {
-      user: testUsers.bob,
-      webinaireId: webinaire.props.id,
-    };
+    const payload = new ReserveSeatsCommand(testUsers.bob, webinaire.props.id);
 
     it('should reserve a seat', async () => {
       await useCase.execute(payload);
@@ -111,10 +111,7 @@ describe('Feature: canceling webinaire', () => {
   });
 
   describe('Scenario: webinaire does not exist', () => {
-    const payload = {
-      user: testUsers.bob,
-      webinaireId: 'some-id-you-know',
-    };
+    const payload = new ReserveSeatsCommand(testUsers.bob, 'some-id-you-know');
 
     it('should fail', async () => {
       expect(async () => await useCase.execute(payload)).rejects.toThrowError(
@@ -125,10 +122,10 @@ describe('Feature: canceling webinaire', () => {
   });
 
   describe('Scenario: webinaire is full', () => {
-    const payload = {
-      user: testUsers.bob,
-      webinaireId: singleSeatWebinaire.props.id,
-    };
+    const payload = new ReserveSeatsCommand(
+      testUsers.bob,
+      singleSeatWebinaire.props.id,
+    );
 
     it('should fail', async () => {
       expect(async () => await useCase.execute(payload)).rejects.toThrowError(
@@ -139,10 +136,10 @@ describe('Feature: canceling webinaire', () => {
   });
 
   describe('Scenario: reserve a seat in an already full webinaire', () => {
-    const payload = {
-      user: testUsers.bob,
-      webinaireId: singleSeatWebinaire.props.id,
-    };
+    const payload = new ReserveSeatsCommand(
+      testUsers.bob,
+      singleSeatWebinaire.props.id,
+    );
 
     it('should fail', async () => {
       expect(async () => await useCase.execute(payload)).rejects.toThrowError(
@@ -153,10 +150,10 @@ describe('Feature: canceling webinaire', () => {
   });
 
   describe('Scenario: reserve a seat you already have one', () => {
-    const payload = {
-      user: testUsers.charles,
-      webinaireId: singleSeatWebinaire.props.id,
-    };
+    const payload = new ReserveSeatsCommand(
+      testUsers.charles,
+      singleSeatWebinaire.props.id,
+    );
 
     it('should fail', async () => {
       expect(async () => await useCase.execute(payload)).rejects.toThrowError(

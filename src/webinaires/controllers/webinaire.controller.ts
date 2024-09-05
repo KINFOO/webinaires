@@ -4,22 +4,19 @@ import {
   Delete,
   Get,
   HttpCode,
-  Inject,
   Param,
   Post,
   Request,
 } from '@nestjs/common';
+import { QueryBus } from '@nestjs/cqrs';
 import { ZodValidationPipe } from '../../core/pipes/zod-validation.pipe';
 import { User } from '../../users/entities/user.entity';
+import { CancelWebinaire } from '../commands/cancel-webinaire';
+import { ChangeDates } from '../commands/change-dates';
+import { ChangeSeats } from '../commands/change-seats';
+import { OrganizeWebinaire } from '../commands/organise-webinaire';
 import { WebinaireAPI } from '../contracts';
-import {
-  I_GET_WEBINAIRE_BY_ID_QUERY,
-  IGetWebinaireByIdQuery,
-} from '../ports/get-webinaire-by-id.interface';
-import { CancelWebinaire } from '../usecases/cancel-webinaire';
-import { ChangeDates } from '../usecases/change-dates';
-import { ChangeSeats } from '../usecases/change-seats';
-import { OrganizeWebinaire } from '../usecases/organise-webinaire';
+import { GetWebinaireByIdQuery } from '../queries/get-webinaire-by-id';
 
 @Controller()
 export class WebinaireController {
@@ -28,8 +25,7 @@ export class WebinaireController {
     private readonly changeSeats: ChangeSeats,
     private readonly cancelWebinaire: CancelWebinaire,
     private readonly organizeWebinaire: OrganizeWebinaire,
-    @Inject(I_GET_WEBINAIRE_BY_ID_QUERY)
-    private readonly getWebinaireByIdQuery: IGetWebinaireByIdQuery,
+    private readonly queryBus: QueryBus,
   ) {}
 
   @Post('/webinaires')
@@ -96,6 +92,6 @@ export class WebinaireController {
   async handleGetWebinaireById(
     @Param('id') id: string,
   ): Promise<WebinaireAPI.GetWebinaireById.Response> {
-    return this.getWebinaireByIdQuery.execute(id);
+    return this.queryBus.execute(new GetWebinaireByIdQuery(id));
   }
 }

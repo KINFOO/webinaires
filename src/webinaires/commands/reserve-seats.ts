@@ -1,6 +1,6 @@
+import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
 import { IMailer } from '../../core/ports/mailer.interface';
 import { DomainException } from '../../shared/domain-exeption';
-import { Executable } from '../../shared/executable';
 import { User } from '../../users/entities/user.entity';
 import { IUserRepository } from '../../users/ports/user-repository.interface';
 import { Participation } from '../entities/participation.entity';
@@ -10,13 +10,19 @@ import { WebinaireNotFoundException } from '../exceptions/webinaire-not-found';
 import { IParticipationRepository } from '../ports/participation-repository.interface';
 import { IWebinaireRepository } from '../ports/webinaire-repository.interface';
 
-type Request = {
-  user: User;
-  webinaireId: string;
-};
-
 type Response = void;
-export class ReserveSeats implements Executable<Request, Response> {
+
+export class ReserveSeatsCommand implements ICommand {
+  constructor(
+    public user: User,
+    public webinaireId: string,
+  ) {}
+}
+
+@CommandHandler(ReserveSeatsCommand)
+export class ReserveSeatsCommandHandler
+  implements ICommandHandler<ReserveSeatsCommand, Response>
+{
   constructor(
     private readonly participationRepository: IParticipationRepository,
     private readonly userRepository: IUserRepository,
@@ -24,7 +30,7 @@ export class ReserveSeats implements Executable<Request, Response> {
     private readonly mailer: IMailer,
   ) {}
 
-  async execute({ user, webinaireId }: Request): Promise<void> {
+  async execute({ user, webinaireId }: ReserveSeatsCommand): Promise<void> {
     const userId = user.props.id;
     const participation = new Participation({ webinaireId, userId });
     const webinaire = await this.webinaireRepository.findById(webinaireId);

@@ -1,14 +1,15 @@
 import { Controller, Delete, Param, Post, Request } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { User } from '../../users/entities/user.entity';
+import { CancelSeats } from '../commands/cancel-seats';
+import { ReserveSeatsCommand } from '../commands/reserve-seats';
 import { WebinaireAPI } from '../contracts';
-import { CancelSeats } from '../usecases/cancel-seats';
-import { ReserveSeats } from '../usecases/reserve-seats';
 
 @Controller()
 export class ParticipationController {
   constructor(
     private readonly cancelSeats: CancelSeats,
-    private readonly reserveSeats: ReserveSeats,
+    private readonly commandBus: CommandBus,
   ) {}
 
   @Post('/webinaires/:id/participations')
@@ -16,10 +17,7 @@ export class ParticipationController {
     @Param('id') id: string,
     @Request() request: { user: User },
   ): Promise<WebinaireAPI.ReserveSeats.Response> {
-    return this.reserveSeats.execute({
-      user: request.user,
-      webinaireId: id,
-    });
+    return this.commandBus.execute(new ReserveSeatsCommand(request.user, id));
   }
 
   @Delete('/webinaires/:id/participations')
