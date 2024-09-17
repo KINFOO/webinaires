@@ -1,20 +1,19 @@
-name: developer tests
-on:
-  - pull_request
+name: Developer tests
+on: pull_request
 
 jobs:
   jest:
-    name: Developer tests
+    name: Jest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: 9
-          # run_install: false
+          run_install: false
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-      # - run: pnpm install
+          cache: pnpm
+      - run: pnpm install
       - run: pnpm test
