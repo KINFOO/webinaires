@@ -3,7 +3,7 @@ on: pull_request
 
 jobs:
   jest:
-    name: Jest
+    name: Developer tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
