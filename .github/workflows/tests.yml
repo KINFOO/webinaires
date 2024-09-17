@@ -1,0 +1,18 @@
+name: developer tests
+on:
+  - pull_request
+
+jobs:
+  jest:
+  name: Developer tests
+  steps:
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@0609f0983b7a228f052f81ef4c3d6510cae254ad
+      with:
+        version: 9.7.1
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+    - run: pnpm install
+    - run: pnpm test
