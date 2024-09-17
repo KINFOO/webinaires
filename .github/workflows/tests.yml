@@ -4,7 +4,6 @@ on:
 
 jobs:
   jest:
-  name: Developer tests
   steps:
     - uses: actions/checkout@v4
     - uses: pnpm/action-setup@0609f0983b7a228f052f81ef4c3d6510cae254ad
