@@ -1,23 +1,32 @@
+import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
 import { DomainException } from '../../shared/domain-exeption';
-import { Executable } from '../../shared/executable';
 import { User } from '../../users/entities/user.entity';
 import { WebinaireNotFoundException } from '../exceptions/webinaire-not-found';
 import { WebinaireTooManySeatsException } from '../exceptions/webinaire-too-many-seats';
 import { WebinaireUpdateForbiddenException } from '../exceptions/webinaire-update-forbidden';
 import { IWebinaireRepository } from '../ports/webinaire-repository.interface';
 
-type Request = {
-  user: User;
-  webinaireId: string;
-  seats: number;
-};
+export class ChangeSeatsCommand implements ICommand {
+  constructor(
+    public user: User,
+    public webinaireId: string,
+    public seats: number,
+  ) {}
+}
 
 type Response = void;
 
-export class ChangeSeats implements Executable<Request, Response> {
+@CommandHandler(ChangeSeatsCommand)
+export class ChangeSeatsCommandHandler
+  implements ICommandHandler<ChangeSeatsCommand, Response>
+{
   constructor(private readonly webinaireRepository: IWebinaireRepository) {}
 
-  async execute({ user, webinaireId, seats }: Request): Promise<Response> {
+  async execute({
+    user,
+    webinaireId,
+    seats,
+  }: ChangeSeatsCommand): Promise<Response> {
     const webinaire = await this.webinaireRepository.findById(webinaireId);
     if (!webinaire) {
       throw new WebinaireNotFoundException();

@@ -13,7 +13,7 @@ import { ZodValidationPipe } from '../../core/pipes/zod-validation.pipe';
 import { User } from '../../users/entities/user.entity';
 import { CancelWebinaireCommand } from '../commands/cancel-webinaire';
 import { ChangeDatesCommand } from '../commands/change-dates';
-import { ChangeSeats } from '../commands/change-seats';
+import { ChangeSeatsCommand } from '../commands/change-seats';
 import { OrganizeWebinaire } from '../commands/organise-webinaire';
 import { WebinaireAPI } from '../contracts';
 import { GetWebinaireByIdQuery } from '../queries/get-webinaire-by-id';
@@ -21,7 +21,6 @@ import { GetWebinaireByIdQuery } from '../queries/get-webinaire-by-id';
 @Controller()
 export class WebinaireController {
   constructor(
-    private readonly changeSeats: ChangeSeats,
     private readonly commandBus: CommandBus,
     private readonly organizeWebinaire: OrganizeWebinaire,
     private readonly queryBus: QueryBus,
@@ -51,11 +50,9 @@ export class WebinaireController {
     body: WebinaireAPI.ChangeSeats.Request,
     @Request() request: { user: User },
   ): Promise<WebinaireAPI.ChangeSeats.Response> {
-    return this.changeSeats.execute({
-      user: request.user,
-      webinaireId: id,
-      seats: body.seats,
-    });
+    return this.commandBus.execute(
+      new ChangeSeatsCommand(request.user, id, body.seats),
+    );
   }
 
   @HttpCode(200)

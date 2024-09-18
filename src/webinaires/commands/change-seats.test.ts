@@ -1,7 +1,7 @@
 import { testUsers } from '../../users/tests/user-seeds';
 import { InMemoryWebinaireRepository } from '../adapters/in-memory-webinaire-repository';
 import { Webinaire } from '../entities/webinaire.entity';
-import { ChangeSeats } from './change-seats';
+import { ChangeSeatsCommand, ChangeSeatsCommandHandler } from './change-seats';
 
 describe("Feature: updating webinaire's seats", () => {
   function expectSeatsToRemainUnchanged() {
@@ -19,20 +19,18 @@ describe("Feature: updating webinaire's seats", () => {
   });
 
   let repository: InMemoryWebinaireRepository;
-  let useCase: ChangeSeats;
+  let useCase: ChangeSeatsCommandHandler;
 
   beforeEach(async () => {
     repository = new InMemoryWebinaireRepository([webinaire]);
-    useCase = new ChangeSeats(repository);
+    useCase = new ChangeSeatsCommandHandler(repository);
   });
 
   describe('Scenario: happy path', () => {
     it('should change the number of seats', async () => {
-      await useCase.execute({
-        user: testUsers.alice,
-        webinaireId: 'id-1',
-        seats: 100,
-      });
+      const payload = new ChangeSeatsCommand(testUsers.alice, 'id-1', 100);
+
+      await useCase.execute(payload);
 
       const webinaire = await repository.findById('id-1');
       expect(webinaire).not.toBeNull();
@@ -42,12 +40,10 @@ describe("Feature: updating webinaire's seats", () => {
 
   describe('Scenario: webinaire does not exist', () => {
     it('should fail', async () => {
+      const payload = new ChangeSeatsCommand(testUsers.alice, 'id-2', 100);
+
       expect(async () => {
-        await useCase.execute({
-          user: testUsers.alice,
-          webinaireId: 'id-2',
-          seats: 100,
-        });
+        await useCase.execute(payload);
       }).rejects.toThrow('Webinaire not found');
 
       const webinaire = await repository.findById('id-2');
@@ -57,11 +53,7 @@ describe("Feature: updating webinaire's seats", () => {
 
   describe("Scenario: user is not webinaire's organizer", () => {
     it('should fail', async () => {
-      const payload = {
-        user: testUsers.bob,
-        webinaireId: 'id-1',
-        seats: 100,
-      };
+      const payload = new ChangeSeatsCommand(testUsers.bob, 'id-1', 100);
 
       expect(async () => await useCase.execute(payload)).rejects.toThrow(
         'Not allowed to update this webinaire',
@@ -73,11 +65,7 @@ describe("Feature: updating webinaire's seats", () => {
 
   describe('Scenario: seat decrease', () => {
     it('should fail', async () => {
-      const payload = {
-        user: testUsers.alice,
-        webinaireId: 'id-1',
-        seats: 49,
-      };
+      const payload = new ChangeSeatsCommand(testUsers.alice, 'id-1', 49);
 
       expect(async () => await useCase.execute(payload)).rejects.toThrow(
         'Seats upgrade only',
@@ -89,11 +77,7 @@ describe("Feature: updating webinaire's seats", () => {
 
   describe('Scenario: increase seats above limit', () => {
     it('should fail', async () => {
-      const payload = {
-        user: testUsers.alice,
-        webinaireId: 'id-1',
-        seats: 1001,
-      };
+      const payload = new ChangeSeatsCommand(testUsers.alice, 'id-1', 1001);
 
       expect(async () => await useCase.execute(payload)).rejects.toThrow(
         'Webinaire must have a maximum of 1500 seats',
