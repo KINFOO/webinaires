@@ -14,7 +14,7 @@ import { MongoWebinaire } from './adapters/mongo/mongo-webinaire';
 import { MongoWebinaireRepository } from './adapters/mongo/mongo-webinaire-repository';
 import { CancelSeatsCommandHandler } from './commands/cancel-seats';
 import { CancelWebinaireCommandHandler } from './commands/cancel-webinaire';
-import { ChangeDates } from './commands/change-dates';
+import { ChangeDatesCommandHandler } from './commands/change-dates';
 import { ChangeSeats } from './commands/change-seats';
 import { OrganizeWebinaire } from './commands/organise-webinaire';
 import { ReserveSeatsCommandHandler } from './commands/reserve-seats';
@@ -58,7 +58,7 @@ import { GetWebinaireByIdQueryHandler } from './queries/get-webinaire-by-id';
       },
     },
     {
-      provide: ChangeDates,
+      provide: ChangeDatesCommandHandler,
       inject: [
         I_PARTICIPATION_REPOSITORY,
         I_USER_REPOSITORY,
@@ -73,7 +73,7 @@ import { GetWebinaireByIdQueryHandler } from './queries/get-webinaire-by-id';
         dateGeneraror,
         mailer,
       ) => {
-        return new ChangeDates(
+        return new ChangeDatesCommandHandler(
           participationRepository,
           userRepository,
           webinaireRepository,

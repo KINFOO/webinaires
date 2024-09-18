@@ -6,7 +6,7 @@ import { InMemoryParticipationRepository } from '../adapters/in-memory-participa
 import { InMemoryWebinaireRepository } from '../adapters/in-memory-webinaire-repository';
 import { Participation } from '../entities/participation.entity';
 import { Webinaire } from '../entities/webinaire.entity';
-import { ChangeDates } from './change-dates';
+import { ChangeDatesCommand, ChangeDatesCommandHandler } from './change-dates';
 
 describe("Feature: updating webinaire's dates", () => {
   function expectDatesToRemainUnchanged() {
@@ -31,7 +31,7 @@ describe("Feature: updating webinaire's dates", () => {
     webinaireId: webinaire.props.id,
   });
 
-  let useCase: ChangeDates;
+  let useCase: ChangeDatesCommandHandler;
   let mailer: InMemoryMailer;
   let participationRepository: InMemoryParticipationRepository;
   let userRepository: InMemoryUserRepository;
@@ -47,7 +47,7 @@ describe("Feature: updating webinaire's dates", () => {
       testUsers.alice,
       testUsers.bob,
     ]);
-    useCase = new ChangeDates(
+    useCase = new ChangeDatesCommandHandler(
       participationRepository,
       userRepository,
       webinaireRepository,
@@ -59,12 +59,12 @@ describe("Feature: updating webinaire's dates", () => {
   describe('Scenario: happy path', () => {
     const startDate = new Date('2024-01-10T10:00:00.000Z');
     const endDate = new Date('2024-01-10T11:00:00.000Z');
-    const payload = {
-      user: testUsers.alice,
-      webinaireId: 'id-1',
+    const payload = new ChangeDatesCommand(
       startDate,
       endDate,
-    };
+      testUsers.alice,
+      'id-1',
+    );
 
     it('should change dates', async () => {
       await useCase.execute(payload);
@@ -110,12 +110,12 @@ describe("Feature: updating webinaire's dates", () => {
 
   describe("Scenario: user is not webinaire's organizer", () => {
     it('should fail', async () => {
-      const payload = {
-        user: testUsers.bob,
-        webinaireId: 'id-1',
-        startDate: new Date('2024-01-10T10:00:00.000Z'),
-        endDate: new Date('2024-01-10T11:00:00.000Z'),
-      };
+      const payload = new ChangeDatesCommand(
+        new Date('2024-01-10T10:00:00.000Z'),
+        new Date('2024-01-10T11:00:00.000Z'),
+        testUsers.bob,
+        'id-1',
+      );
 
       expect(async () => await useCase.execute(payload)).rejects.toThrow(
         'Not allowed to update this webinaire',
@@ -127,12 +127,12 @@ describe("Feature: updating webinaire's dates", () => {
 
   describe('Scenario: change date close to today', () => {
     it('should fail', async () => {
-      const payload = {
-        user: testUsers.alice,
-        webinaireId: 'id-1',
-        startDate: new Date('2023-01-01T00:00:00.000Z'),
-        endDate: new Date('2023-01-03T00:00:00.000Z'),
-      };
+      const payload = new ChangeDatesCommand(
+        new Date('2023-01-01T00:00:00.000Z'),
+        new Date('2023-01-03T00:00:00.000Z'),
+        testUsers.alice,
+        'id-1',
+      );
 
       expect(async () => await useCase.execute(payload)).rejects.toThrow(
         'Webinaire must happen in least 3 days',

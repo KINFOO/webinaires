@@ -12,7 +12,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ZodValidationPipe } from '../../core/pipes/zod-validation.pipe';
 import { User } from '../../users/entities/user.entity';
 import { CancelWebinaireCommand } from '../commands/cancel-webinaire';
-import { ChangeDates } from '../commands/change-dates';
+import { ChangeDatesCommand } from '../commands/change-dates';
 import { ChangeSeats } from '../commands/change-seats';
 import { OrganizeWebinaire } from '../commands/organise-webinaire';
 import { WebinaireAPI } from '../contracts';
@@ -21,7 +21,6 @@ import { GetWebinaireByIdQuery } from '../queries/get-webinaire-by-id';
 @Controller()
 export class WebinaireController {
   constructor(
-    private readonly changeDates: ChangeDates,
     private readonly changeSeats: ChangeSeats,
     private readonly commandBus: CommandBus,
     private readonly organizeWebinaire: OrganizeWebinaire,
@@ -68,12 +67,9 @@ export class WebinaireController {
     @Request() request: { user: User },
   ): Promise<WebinaireAPI.ChangeDates.Response> {
     const { endDate, startDate } = body;
-    return this.changeDates.execute({
-      user: request.user,
-      webinaireId: id,
-      endDate,
-      startDate,
-    });
+    return this.commandBus.execute(
+      new ChangeDatesCommand(startDate, endDate, request.user, id),
+    );
   }
 
   @HttpCode(200)

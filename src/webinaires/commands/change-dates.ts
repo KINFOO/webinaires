@@ -1,6 +1,6 @@
+import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
 import { IDateGenerator } from '../../core/ports/date-generator.interface';
 import { IMailer } from '../../core/ports/mailer.interface';
-import { Executable } from '../../shared/executable';
 import { User } from '../../users/entities/user.entity';
 import { IUserRepository } from '../../users/ports/user-repository.interface';
 import { Webinaire } from '../entities/webinaire.entity';
@@ -10,16 +10,21 @@ import { WebinaireUpdateForbiddenException } from '../exceptions/webinaire-updat
 import { IParticipationRepository } from '../ports/participation-repository.interface';
 import { IWebinaireRepository } from '../ports/webinaire-repository.interface';
 
-type Request = {
-  startDate: Date;
-  endDate: Date;
-  user: User;
-  webinaireId: string;
-};
+export class ChangeDatesCommand implements ICommand {
+  constructor(
+    public startDate: Date,
+    public endDate: Date,
+    public user: User,
+    public webinaireId: string,
+  ) {}
+}
 
 type Response = void;
 
-export class ChangeDates implements Executable<Request, Response> {
+@CommandHandler(ChangeDatesCommand)
+export class ChangeDatesCommandHandler
+  implements ICommandHandler<ChangeDatesCommand, Response>
+{
   constructor(
     private readonly participationRepository: IParticipationRepository,
     private readonly userRepository: IUserRepository,
@@ -32,7 +37,7 @@ export class ChangeDates implements Executable<Request, Response> {
     webinaireId,
     startDate,
     endDate,
-  }: Request): Promise<Response> {
+  }: ChangeDatesCommand): Promise<Response> {
     const webinaire = await this.webinaireRepository.findById(webinaireId);
     if (!webinaire) {
       throw new WebinaireNotFoundException();
