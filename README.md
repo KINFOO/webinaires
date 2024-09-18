@@ -28,5 +28,5 @@ $ pnpm run test:int
 ```bash
 $ export DOCKER_HOST=unix://${HOME}/.colima/default/docker.sock
 $ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
-$ pnpm test:int
+$ pnpm run test:int
 ```

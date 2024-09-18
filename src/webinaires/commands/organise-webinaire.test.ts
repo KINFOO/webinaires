@@ -3,7 +3,10 @@ import { FixedIDGenerator } from '../../core/adapters/fixed-id-generator';
 import { testUsers } from '../../users/tests/user-seeds';
 import { InMemoryWebinaireRepository } from '../adapters/in-memory-webinaire-repository';
 import { Webinaire } from '../entities/webinaire.entity';
-import { OrganizeWebinaire } from './organise-webinaire';
+import {
+  OrganizeWebinaireCommand,
+  OrganizeWebinaireCommandHandler,
+} from './organise-webinaire';
 
 describe('Feature: organizing a webinaire', () => {
   function expectWebinaireToEqual(webinaire: Webinaire) {
@@ -18,23 +21,27 @@ describe('Feature: organizing a webinaire', () => {
   }
 
   let repository: InMemoryWebinaireRepository;
-  let useCase: OrganizeWebinaire;
+  let useCase: OrganizeWebinaireCommandHandler;
   const idGenerator = new FixedIDGenerator();
   const dateGenerator = new FixedDateGenerator();
 
   beforeEach(() => {
     repository = new InMemoryWebinaireRepository();
-    useCase = new OrganizeWebinaire(repository, idGenerator, dateGenerator);
+    useCase = new OrganizeWebinaireCommandHandler(
+      repository,
+      idGenerator,
+      dateGenerator,
+    );
   });
 
   describe('Scenario: happy path', () => {
-    const payload = {
-      title: 'My first webinaire',
-      seats: 100,
-      startDate: new Date('2023-01-10T10:00:00.000Z'),
-      endDate: new Date('2023-01-10T11:00:00.000Z'),
-      user: testUsers.alice,
-    };
+    const payload = new OrganizeWebinaireCommand(
+      'My first webinaire',
+      new Date('2023-01-10T10:00:00.000Z'),
+      new Date('2023-01-10T11:00:00.000Z'),
+      100,
+      testUsers.alice,
+    );
 
     it('should return the ID', async () => {
       const result = await useCase.execute(payload);
@@ -53,13 +60,13 @@ describe('Feature: organizing a webinaire', () => {
   });
 
   describe('Scenario: webinaire happens to soon', () => {
-    const payload = {
-      title: 'My first webinaire',
-      seats: 100,
-      startDate: new Date('2023-01-01T10:00:00.000Z'),
-      endDate: new Date('2023-01-01T11:00:00.000Z'),
-      user: testUsers.alice,
-    };
+    const payload = new OrganizeWebinaireCommand(
+      'My first webinaire',
+      new Date('2023-01-01T10:00:00.000Z'),
+      new Date('2023-01-01T11:00:00.000Z'),
+      100,
+      testUsers.alice,
+    );
 
     it('should throw an error', async () => {
       await expect(() => useCase.execute(payload)).rejects.toThrowError(
@@ -76,19 +83,20 @@ describe('Feature: organizing a webinaire', () => {
   });
 
   describe('Scenario: webinaire has to many seats', () => {
-    const payload = {
-      title: 'My first webinaire',
-      seats: 1500,
-      startDate: new Date('2023-01-10T10:00:00.000Z'),
-      endDate: new Date('2023-01-10T11:00:00.000Z'),
-      user: testUsers.alice,
-    };
+    const payload = new OrganizeWebinaireCommand(
+      'My first webinaire',
+      new Date('2023-01-10T10:00:00.000Z'),
+      new Date('2023-01-10T11:00:00.000Z'),
+      1500,
+      testUsers.alice,
+    );
 
     it('should throw an error', async () => {
       await expect(() => useCase.execute(payload)).rejects.toThrowError(
         'Webinaire must have a maximum of 1500 seats',
       );
     });
+
     it('should not create a webinaire', async () => {
       try {
         await useCase.execute(payload);
@@ -99,19 +107,20 @@ describe('Feature: organizing a webinaire', () => {
   });
 
   describe('Scenario: webinaire must have seats', () => {
-    const payload = {
-      title: 'My first webinaire',
-      seats: -1,
-      startDate: new Date('2023-01-10T10:00:00.000Z'),
-      endDate: new Date('2023-01-10T11:00:00.000Z'),
-      user: testUsers.alice,
-    };
+    const payload = new OrganizeWebinaireCommand(
+      'My first webinaire',
+      new Date('2023-01-10T10:00:00.000Z'),
+      new Date('2023-01-10T11:00:00.000Z'),
+      -1,
+      testUsers.alice,
+    );
 
     it('should throw an error', async () => {
       await expect(() => useCase.execute(payload)).rejects.toThrowError(
         'Webinaire must have seats',
       );
     });
+
     it('should not create a webinaire', async () => {
       try {
         await useCase.execute(payload);

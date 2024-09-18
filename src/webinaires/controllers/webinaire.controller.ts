@@ -14,7 +14,7 @@ import { User } from '../../users/entities/user.entity';
 import { CancelWebinaireCommand } from '../commands/cancel-webinaire';
 import { ChangeDatesCommand } from '../commands/change-dates';
 import { ChangeSeatsCommand } from '../commands/change-seats';
-import { OrganizeWebinaire } from '../commands/organise-webinaire';
+import { OrganizeWebinaireCommand } from '../commands/organise-webinaire';
 import { WebinaireAPI } from '../contracts';
 import { GetWebinaireByIdQuery } from '../queries/get-webinaire-by-id';
 
@@ -22,7 +22,6 @@ import { GetWebinaireByIdQuery } from '../queries/get-webinaire-by-id';
 export class WebinaireController {
   constructor(
     private readonly commandBus: CommandBus,
-    private readonly organizeWebinaire: OrganizeWebinaire,
     private readonly queryBus: QueryBus,
   ) {}
 
@@ -33,13 +32,15 @@ export class WebinaireController {
     @Request() request: { user: User },
   ): Promise<WebinaireAPI.OrganizeWebinaire.Response> {
     const { title, seats, startDate, endDate } = body;
-    return this.organizeWebinaire.execute({
-      user: request.user,
-      title,
-      seats,
-      startDate,
-      endDate,
-    });
+    return this.commandBus.execute(
+      new OrganizeWebinaireCommand(
+        title,
+        startDate,
+        endDate,
+        seats,
+        request.user,
+      ),
+    );
   }
 
   @HttpCode(200)

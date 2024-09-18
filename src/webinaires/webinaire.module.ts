@@ -16,7 +16,7 @@ import { CancelSeatsCommandHandler } from './commands/cancel-seats';
 import { CancelWebinaireCommandHandler } from './commands/cancel-webinaire';
 import { ChangeDatesCommandHandler } from './commands/change-dates';
 import { ChangeSeatsCommandHandler } from './commands/change-seats';
-import { OrganizeWebinaire } from './commands/organise-webinaire';
+import { OrganizeWebinaireCommandHandler } from './commands/organise-webinaire';
 import { ReserveSeatsCommandHandler } from './commands/reserve-seats';
 import { ParticipationController } from './controllers/participation.controller';
 import { WebinaireController } from './controllers/webinaire.controller';
@@ -51,10 +51,14 @@ import { GetWebinaireByIdQueryHandler } from './queries/get-webinaire-by-id';
       useFactory: (model) => new MongoWebinaireRepository(model),
     },
     {
-      provide: OrganizeWebinaire,
+      provide: OrganizeWebinaireCommandHandler,
       inject: [I_DATE_GENERATOR, I_ID_GENERATOR, I_WEBINAIRE_REPOSITORY],
       useFactory: (dateGenerator, idGenerator, repository) => {
-        return new OrganizeWebinaire(repository, idGenerator, dateGenerator);
+        return new OrganizeWebinaireCommandHandler(
+          repository,
+          idGenerator,
+          dateGenerator,
+        );
       },
     },
     {

@@ -1,6 +1,6 @@
+import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
 import { IDateGenerator } from '../../core/ports/date-generator.interface';
 import { IIDGenerator } from '../../core/ports/id-generator.interface';
-import { Executable } from '../../shared/executable';
 import { User } from '../../users/entities/user.entity';
 import { Webinaire } from '../entities/webinaire.entity';
 import { WebinaireNotEnoughSeatsException } from '../exceptions/webinaire-not-enough-seats';
@@ -8,23 +8,29 @@ import { WebinaireTooEarlyException } from '../exceptions/webinaire-too-early';
 import { WebinaireTooManySeatsException } from '../exceptions/webinaire-too-many-seats';
 import { IWebinaireRepository } from '../ports/webinaire-repository.interface';
 
-type Request = {
-  title: string;
-  startDate: Date;
-  endDate: Date;
-  seats: number;
-  user: User;
-};
+export class OrganizeWebinaireCommand implements ICommand {
+  constructor(
+    public title: string,
+    public startDate: Date,
+    public endDate: Date,
+    public seats: number,
+    public user: User,
+  ) {}
+}
 
 type Response = { id: string };
-export class OrganizeWebinaire implements Executable<Request, Response> {
+
+@CommandHandler(OrganizeWebinaireCommand)
+export class OrganizeWebinaireCommandHandler
+  implements ICommandHandler<OrganizeWebinaireCommand, Response>
+{
   constructor(
     private readonly repository: IWebinaireRepository,
     private readonly idGenerator: IIDGenerator,
     private readonly dateGeneraror: IDateGenerator,
   ) {}
 
-  async execute(data: Request) {
+  async execute(data: OrganizeWebinaireCommand) {
     const id = this.idGenerator.generate();
     const { title, seats, startDate, endDate, user } = data;
     const webinaire = new Webinaire({
@@ -44,7 +50,7 @@ export class OrganizeWebinaire implements Executable<Request, Response> {
       throw new WebinaireNotEnoughSeatsException();
     }
 
-    this.repository.create(webinaire);
+    await this.repository.create(webinaire);
 
     return { id };
   }
