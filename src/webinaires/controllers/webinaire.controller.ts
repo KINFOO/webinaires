@@ -8,10 +8,10 @@ import {
   Post,
   Request,
 } from '@nestjs/common';
-import { QueryBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ZodValidationPipe } from '../../core/pipes/zod-validation.pipe';
 import { User } from '../../users/entities/user.entity';
-import { CancelWebinaire } from '../commands/cancel-webinaire';
+import { CancelWebinaireCommand } from '../commands/cancel-webinaire';
 import { ChangeDates } from '../commands/change-dates';
 import { ChangeSeats } from '../commands/change-seats';
 import { OrganizeWebinaire } from '../commands/organise-webinaire';
@@ -23,7 +23,7 @@ export class WebinaireController {
   constructor(
     private readonly changeDates: ChangeDates,
     private readonly changeSeats: ChangeSeats,
-    private readonly cancelWebinaire: CancelWebinaire,
+    private readonly commandBus: CommandBus,
     private readonly organizeWebinaire: OrganizeWebinaire,
     private readonly queryBus: QueryBus,
   ) {}
@@ -82,10 +82,9 @@ export class WebinaireController {
     @Param('id') id: string,
     @Request() request: { user: User },
   ): Promise<WebinaireAPI.DeleteWebinaire.Response> {
-    return this.cancelWebinaire.execute({
-      user: request.user,
-      webinaireId: id,
-    });
+    return this.commandBus.execute(
+      new CancelWebinaireCommand(request.user, id),
+    );
   }
 
   @Get('/webinaires/:id')

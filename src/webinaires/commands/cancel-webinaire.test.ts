@@ -5,7 +5,10 @@ import { InMemoryParticipationRepository } from '../adapters/in-memory-participa
 import { InMemoryWebinaireRepository } from '../adapters/in-memory-webinaire-repository';
 import { Participation } from '../entities/participation.entity';
 import { Webinaire } from '../entities/webinaire.entity';
-import { CancelWebinaire } from './cancel-webinaire';
+import {
+  CancelWebinaireCommand,
+  CancelWebinaireCommandHandler,
+} from './cancel-webinaire';
 
 describe('Feature: canceling webinaire', () => {
   function expectWebinaireToBeDeleted() {
@@ -32,7 +35,7 @@ describe('Feature: canceling webinaire', () => {
     webinaireId: webinaire.props.id,
   });
 
-  let useCase: CancelWebinaire;
+  let useCase: CancelWebinaireCommandHandler;
   let mailer: InMemoryMailer;
   let participationRepository: InMemoryParticipationRepository;
   let userRepository: InMemoryUserRepository;
@@ -50,7 +53,7 @@ describe('Feature: canceling webinaire', () => {
     participationRepository = new InMemoryParticipationRepository([
       bobParticipation,
     ]);
-    useCase = new CancelWebinaire(
+    useCase = new CancelWebinaireCommandHandler(
       webinaireRepository,
       participationRepository,
       userRepository,
@@ -59,10 +62,10 @@ describe('Feature: canceling webinaire', () => {
   });
 
   describe('Scenario: happy path', () => {
-    const payload = {
-      user: testUsers.alice,
-      webinaireId: webinaire.props.id,
-    };
+    const payload = new CancelWebinaireCommand(
+      testUsers.alice,
+      webinaire.props.id,
+    );
 
     it('delete the webinaire', async () => {
       await useCase.execute(payload);
@@ -82,10 +85,7 @@ describe('Feature: canceling webinaire', () => {
   });
 
   describe('Scenario: webinaire does not exist', () => {
-    const payload = {
-      user: testUsers.alice,
-      webinaireId: 'id-2',
-    };
+    const payload = new CancelWebinaireCommand(testUsers.alice, 'id-2');
 
     it('should fail', async () => {
       expect(async () => await useCase.execute(payload)).rejects.toThrowError(
@@ -96,10 +96,10 @@ describe('Feature: canceling webinaire', () => {
   });
 
   describe('Scenario: delete someone else webinaire', () => {
-    const payload = {
-      user: testUsers.bob,
-      webinaireId: webinaire.props.id,
-    };
+    const payload = new CancelWebinaireCommand(
+      testUsers.bob,
+      webinaire.props.id,
+    );
 
     it('should fail', async () => {
       expect(async () => await useCase.execute(payload)).rejects.toThrowError(

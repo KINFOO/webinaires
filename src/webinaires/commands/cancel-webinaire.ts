@@ -1,5 +1,5 @@
+import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
 import { IMailer } from '../../core/ports/mailer.interface';
-import { Executable } from '../../shared/executable';
 import { User } from '../../users/entities/user.entity';
 import { IUserRepository } from '../../users/ports/user-repository.interface';
 import { Webinaire } from '../entities/webinaire.entity';
@@ -8,13 +8,19 @@ import { WebinaireUpdateForbiddenException } from '../exceptions/webinaire-updat
 import { IParticipationRepository } from '../ports/participation-repository.interface';
 import { IWebinaireRepository } from '../ports/webinaire-repository.interface';
 
-type Request = {
-  user: User;
-  webinaireId: string;
-};
+export class CancelWebinaireCommand implements ICommand {
+  constructor(
+    public user: User,
+    public webinaireId: string,
+  ) {}
+}
 
 type Response = void;
-export class CancelWebinaire implements Executable<Request, Response> {
+
+@CommandHandler(CancelWebinaireCommand)
+export class CancelWebinaireCommandHandler
+  implements ICommandHandler<CancelWebinaireCommand, Response>
+{
   constructor(
     private readonly webinaireRepository: IWebinaireRepository,
     private readonly participationRepository: IParticipationRepository,
@@ -22,7 +28,10 @@ export class CancelWebinaire implements Executable<Request, Response> {
     private readonly mailer: IMailer,
   ) {}
 
-  async execute({ user, webinaireId }: Request): Promise<Response> {
+  async execute({
+    user,
+    webinaireId,
+  }: CancelWebinaireCommand): Promise<Response> {
     const webinaire = await this.webinaireRepository.findById(webinaireId);
     if (!webinaire) {
       throw new WebinaireNotFoundException();
