@@ -5,7 +5,7 @@ import { InMemoryParticipationRepository } from '../adapters/in-memory-participa
 import { InMemoryWebinaireRepository } from '../adapters/in-memory-webinaire-repository';
 import { Participation } from '../entities/participation.entity';
 import { Webinaire } from '../entities/webinaire.entity';
-import { CancelSeats } from './cancel-seats';
+import { CancelSeatsCommand, CancelSeatsCommandHandler } from './cancel-seats';
 
 describe('Feature: canceling webinaire', () => {
   async function expectParticipationToBeDeleted() {
@@ -38,7 +38,7 @@ describe('Feature: canceling webinaire', () => {
     webinaireId: webinaire.props.id,
   });
 
-  let useCase: CancelSeats;
+  let useCase: CancelSeatsCommandHandler;
   let mailer: InMemoryMailer;
   let participationRepository: InMemoryParticipationRepository;
   let userRepository: InMemoryUserRepository;
@@ -56,7 +56,7 @@ describe('Feature: canceling webinaire', () => {
 
     webinaireRepository = new InMemoryWebinaireRepository([webinaire]);
     mailer = new InMemoryMailer();
-    useCase = new CancelSeats(
+    useCase = new CancelSeatsCommandHandler(
       participationRepository,
       userRepository,
       webinaireRepository,
@@ -65,10 +65,7 @@ describe('Feature: canceling webinaire', () => {
   });
 
   describe('Scenario: happy path', () => {
-    const payload = {
-      user: testUsers.bob,
-      webinaireId: webinaire.props.id,
-    };
+    const payload = new CancelSeatsCommand(testUsers.bob, webinaire.props.id);
 
     it('should cancel a seat', async () => {
       await useCase.execute(payload);
@@ -98,10 +95,7 @@ describe('Feature: canceling webinaire', () => {
   });
 
   describe('Scenario: webinaire does not exist', () => {
-    const payload = {
-      user: testUsers.bob,
-      webinaireId: 'some-id-you-know',
-    };
+    const payload = new CancelSeatsCommand(testUsers.bob, 'some-id-you-know');
 
     it('should fail', async () => {
       expect(async () => await useCase.execute(payload)).rejects.toThrowError(
@@ -112,10 +106,10 @@ describe('Feature: canceling webinaire', () => {
   });
 
   describe('Scenario: user does not attend webinaire', () => {
-    const payload = {
-      user: testUsers.charles,
-      webinaireId: webinaire.props.id,
-    };
+    const payload = new CancelSeatsCommand(
+      testUsers.charles,
+      webinaire.props.id,
+    );
 
     it('should fail', async () => {
       expect(async () => await useCase.execute(payload)).rejects.toThrowError(
