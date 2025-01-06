@@ -30,3 +30,9 @@ $ export DOCKER_HOST=unix://${HOME}/.colima/default/docker.sock
 $ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
 $ pnpm run test:int
 ```
+
+## Run everything
+
+```bash
+$ docker compose up
+```
